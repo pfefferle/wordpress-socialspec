@@ -151,4 +151,28 @@ class Test_Following extends \WP_UnitTestCase {
 		$this->assertNull( ( new Following() )->render() );
 		\remove_filter( 'socialspec_following_opml', '__return_false' );
 	}
+
+	/**
+	 * CDATA sections in values can not break out of the attribute.
+	 *
+	 * @covers ::render
+	 */
+	public function test_render_escapes_cdata() {
+		$text = '<![CDATA["/><outline xmlUrl="https://evil.example/feed" text="x]]>';
+		\add_filter(
+			'socialspec_following',
+			static fn (): array => array(
+				array(
+					'text'   => $text,
+					'xmlUrl' => 'https://example.com/feed/',
+				),
+			)
+		);
+
+		$xml = \simplexml_load_string( ( new Following() )->render() );
+
+		$this->assertNotFalse( $xml, 'The OPML is well-formed XML.' );
+		$this->assertCount( 1, $xml->body->outline );
+		$this->assertSame( $text, (string) $xml->body->outline[0]['text'] );
+	}
 }

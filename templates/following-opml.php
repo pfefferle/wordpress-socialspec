@@ -21,7 +21,7 @@ echo '<?xml version="1.0" encoding="' . \esc_attr( \get_bloginfo( 'charset' ) ) 
 	</head>
 	<body>
 <?php foreach ( $args['outlines'] as $outline ) : ?>
-		<outline <?php echo \implode( ' ', \array_map( static fn ( string $name, string $value ): string => \esc_xml( $name ) . '="' . \esc_xml( $value ) . '"', \array_keys( $outline ), $outline ) ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Names and values are escaped with esc_xml(). ?>/>
+		<outline <?php echo \implode( ' ', \array_map( static fn ( string $name, string $value ): string => $name . '="' . \htmlspecialchars( $value, ENT_XML1 | ENT_QUOTES | ENT_SUBSTITUTE, \get_bloginfo( 'charset' ) ) . '"', \array_keys( $outline ), $outline ) ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Names are validated, values are escaped. esc_xml() would keep CDATA sections. ?>/>
 <?php endforeach; ?>
 	</body>
 </opml>

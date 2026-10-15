@@ -117,10 +117,11 @@ final class Markdown {
 
 			if ( 'A' === $tag ) {
 				$href          = $processor->get_attribute( 'href' );
-				$frame['href'] = \is_string( $href ) ? \trim( $href ) : null;
+				$frame['href'] = \is_string( $href ) && self::is_safe_url( $href ) ? \trim( $href ) : null;
 			} elseif ( 'OL' === $tag ) {
+				// CommonMark list markers have at most nine digits.
 				$start          = $processor->get_attribute( 'start' );
-				$frame['index'] = \is_string( $start ) && \is_numeric( $start ) ? (int) $start : 1;
+				$frame['index'] = \is_string( $start ) && \preg_match( '/^\d{1,9}$/', \trim( $start ) ) ? (int) $start : 1;
 			}
 
 			$this->frames[] = $frame;
@@ -217,7 +218,8 @@ final class Markdown {
 	 * @param string $content The heading content.
 	 */
 	private function heading( int $level, string $content ): void {
-		$content = self::single_line( $content );
+		// A trailing "#" run would be read as the closing sequence.
+		$content = (string) \preg_replace( '/(^|\s)(#+)$/', '$1\\\\$2', self::single_line( $content ) );
 
 		if ( '' !== $content ) {
 			$this->block( \str_repeat( '#', $level ) . ' ' . $content );
@@ -256,7 +258,7 @@ final class Markdown {
 		$src = $processor->get_attribute( 'src' );
 		$alt = $processor->get_attribute( 'alt' );
 
-		if ( ! \is_string( $src ) || '' === \trim( $src ) ) {
+		if ( ! \is_string( $src ) || '' === \trim( $src ) || ! self::is_safe_url( $src ) ) {
 			return '';
 		}
 
@@ -350,7 +352,7 @@ final class Markdown {
 
 		if ( $line_start ) {
 			// Headings, quotes, bullets, fences, thematic breaks, setext underlines and ordered list markers.
-			$text = (string) \preg_replace( '/^(?:[#+-](?=\s|$)|>|~{3}|=+\s*$|-+\s*$)/', '\\\\$0', $text );
+			$text = (string) \preg_replace( '/^(?:(?:#{1,6}|[+-])(?=\s|$)|>|~{3}|=+\s*$|-+\s*$)/', '\\\\$0', $text );
 			$text = (string) \preg_replace( '/^(\d+)([.)])(?=\s|$)/', '$1\\\\$2', $text );
 		}
 
@@ -419,6 +421,17 @@ final class Markdown {
 		}
 
 		return '[' . $text . '](' . self::destination( $href ) . ')';
+	}
+
+	/**
+	 * Whether a URL uses an allowed protocol, e.g. not "javascript:".
+	 *
+	 * @param string $url The URL.
+	 *
+	 * @return bool True if the URL is safe.
+	 */
+	private static function is_safe_url( string $url ): bool {
+		return \wp_kses_bad_protocol( $url, \wp_allowed_protocols() ) === $url;
 	}
 
 	/**

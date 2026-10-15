@@ -125,13 +125,14 @@ final class Following implements Document {
 				continue;
 			}
 
-			$value = (string) $value;
+			// Values may be HTML encoded, like bookmark names. They are escaped again in the template.
+			$value = \html_entity_decode( (string) $value, ENT_QUOTES | ENT_HTML5, \get_bloginfo( 'charset' ) );
 
 			if ( \in_array( $name, self::URL_ATTRIBUTES, true ) ) {
 				$value = \sanitize_url( $value );
 			}
 
-			// Control characters are not allowed in XML 1.0, esc_xml() keeps them.
+			// Control characters are not allowed in XML 1.0.
 			$value = (string) \preg_replace( '/[\x00-\x08\x0B\x0C\x0E-\x1F]/', '', $value );
 
 			if ( '' !== $value ) {
