@@ -61,7 +61,7 @@ final class Settings_Fields {
 			\printf(
 				/* translators: %s: Link to socialspec.org. */
 				\esc_html__( 'Your site publishes its profile with %s: what you follow, who you are and how to reach you, ready for feed readers and social apps.', 'socialspec' ),
-				'<a href="https://socialspec.org/">SocialSpec</a>'
+				'<a href="https://socialspec.org/" target="_blank" rel="noopener noreferrer">SocialSpec</a>'
 			);
 			?>
 		</p>
@@ -116,7 +116,7 @@ final class Settings_Fields {
 				\esc_html__( 'This page is published as Markdown in %1$s. By default it is the page with the slug %2$s, one of the %3$s. Without such a page, the biographical info of the user above is used.', 'socialspec' ),
 				'<code>/.well-known/about.md</code>',
 				'<code>/about</code>',
-				'<a href="https://slashpages.net/#about">' . \esc_html__( 'slash pages', 'socialspec' ) . '</a>'
+				'<a href="https://slashpages.net/#about" target="_blank" rel="noopener noreferrer">' . \esc_html__( 'slash pages', 'socialspec' ) . '</a>'
 			);
 			?>
 		</p>
