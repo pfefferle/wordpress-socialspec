@@ -1,0 +1,30 @@
+{
+  "name": "wordpress-socialspec",
+  "description": "SocialSpec for WordPress",
+  "scripts": {
+    "wp-env": "wp-env",
+    "start": "wp-env start",
+    "stop": "wp-env stop",
+    "destroy": "wp-env destroy"
+  },
+  "devDependencies": {
+    "@wordpress/env": "^11.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/pfefferle/wordpress-socialspec.git"
+  },
+  "keywords": [
+    "well-known",
+    "socialspec",
+    "opml",
+    "vcard",
+    "markdown"
+  ],
+  "author": "Matthias Pfefferle",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/pfefferle/wordpress-socialspec/issues"
+  },
+  "homepage": "https://github.com/pfefferle/wordpress-socialspec"
+}
