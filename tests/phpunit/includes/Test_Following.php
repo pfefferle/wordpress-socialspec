@@ -29,7 +29,7 @@ class Test_Following extends \WP_UnitTestCase {
 	 * @covers ::render
 	 */
 	public function test_render_without_feeds() {
-		$xml = \simplexml_load_string( ( new Following() )->render() );
+		$xml = \simplexml_load_string( $this->render( new Following() ) );
 
 		$this->assertNotFalse( $xml, 'The OPML is well-formed XML.' );
 		$this->assertCount( 0, $xml->body->outline );
@@ -65,7 +65,7 @@ class Test_Following extends \WP_UnitTestCase {
 			)
 		);
 
-		$opml = ( new Following() )->render();
+		$opml = $this->render( new Following() );
 		$xml  = \simplexml_load_string( $opml );
 
 		$this->assertNotFalse( $xml, 'The OPML is well-formed XML.' );
@@ -107,7 +107,7 @@ class Test_Following extends \WP_UnitTestCase {
 			)
 		);
 
-		$this->assertStringNotContainsString( 'javascript', ( new Following() )->render() );
+		$this->assertStringNotContainsString( 'javascript', $this->render( new Following() ) );
 	}
 
 	/**
@@ -131,26 +131,15 @@ class Test_Following extends \WP_UnitTestCase {
 		);
 
 		\update_option( 'link_manager_enabled', 0 );
-		$this->assertCount( 0, \simplexml_load_string( ( new Following() )->render() )->body->outline );
+		$this->assertCount( 0, \simplexml_load_string( $this->render( new Following() ) )->body->outline );
 
 		\update_option( 'link_manager_enabled', 1 );
-		$xml = \simplexml_load_string( ( new Following() )->render() );
+		$xml = \simplexml_load_string( $this->render( new Following() ) );
 
 		$this->assertCount( 1, $xml->body->outline );
 		$this->assertSame( 'Kottke', (string) $xml->body->outline[0]['text'] );
 		$this->assertSame( 'rss', (string) $xml->body->outline[0]['type'] );
 		$this->assertSame( 'https://feeds.kottke.org/main', (string) $xml->body->outline[0]['xmlUrl'] );
-	}
-
-	/**
-	 * A filter can remove the document.
-	 *
-	 * @covers ::render
-	 */
-	public function test_render_filtered_away() {
-		\add_filter( 'socialspec_following_opml', '__return_false' );
-		$this->assertNull( ( new Following() )->render() );
-		\remove_filter( 'socialspec_following_opml', '__return_false' );
 	}
 
 	/**
@@ -170,7 +159,7 @@ class Test_Following extends \WP_UnitTestCase {
 			)
 		);
 
-		$xml = \simplexml_load_string( ( new Following() )->render() );
+		$xml = \simplexml_load_string( $this->render( new Following() ) );
 
 		$this->assertNotFalse( $xml, 'The OPML is well-formed XML.' );
 		$this->assertCount( 1, $xml->body->outline );
@@ -188,7 +177,7 @@ class Test_Following extends \WP_UnitTestCase {
 
 		\add_filter( 'pre_load_script_translations', static fn (): string => '{"locale_data":{"messages":{"":{"lang":"de_DE"},"Feed":["Feed <&>"]}}}' );
 
-		$opml = $following->render();
+		$opml = $this->render( $following );
 		$xml  = \simplexml_load_string( $opml );
 
 		$this->assertSame( 'application/xml', $following->get_content_type() );
@@ -197,5 +186,38 @@ class Test_Following extends \WP_UnitTestCase {
 		// The dependencies first, the translations escaped for XML.
 		$this->assertMatchesRegularExpression( '#/hooks(\.min)?\.js\?ver=.*/i18n(\.min)?\.js\?ver=.*/assets/js/opml\.js\?ver=' . \preg_quote( SOCIALSPEC_VERSION, '#' ) . '"#s', $opml );
 		$this->assertStringContainsString( 'id="opml-translations">{"locale_data":{"messages":{"":{"lang":"de_DE"},"Feed":["Feed &lt;&amp;&gt;"]}}}</script>', $opml );
+	}
+
+	/**
+	 * Plugins can print into the head and the body.
+	 *
+	 * @covers ::render
+	 */
+	public function test_actions() {
+		\add_action( 'socialspec_following_opml_head', static fn () => print( '<ownerName>Jordan</ownerName>' ) );
+		\add_action( 'socialspec_following_opml_body', static fn () => print( '<outline text="Group"><outline text="A" xmlUrl="https://example.com/feed/"/></outline>' ) );
+
+		$xml = \simplexml_load_string( $this->render( new Following() ) );
+
+		$this->assertSame( 'Jordan', (string) $xml->head->ownerName );
+		$this->assertSame( 'A', (string) $xml->body->outline[0]->outline[0]['text'] );
+
+		\remove_all_actions( 'socialspec_following_opml_head' );
+		\remove_all_actions( 'socialspec_following_opml_body' );
+	}
+
+	/**
+	 * Prints a document and returns the output.
+	 *
+	 * @param \Socialspec\Document $document The document.
+	 *
+	 * @return string|null The output, or null if there is nothing to publish.
+	 */
+	private function render( \Socialspec\Document $document ): ?string {
+		\ob_start();
+		$published = $document->render();
+		$output    = (string) \ob_get_clean();
+
+		return $published ? $output : null;
 	}
 }

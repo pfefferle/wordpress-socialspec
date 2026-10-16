@@ -22,9 +22,9 @@ interface Document {
 	public function get_content_type(): string;
 
 	/**
-	 * Renders the document.
+	 * Prints the document.
 	 *
-	 * @return string|null The document, or null if there is nothing to publish.
+	 * @return bool False if there is nothing to publish, then nothing is printed.
 	 */
-	public function render(): ?string;
+	public function render(): bool;
 }

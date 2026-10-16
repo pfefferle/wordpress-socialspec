@@ -104,37 +104,6 @@ class Test_Socialspec extends \WP_UnitTestCase {
 	}
 
 	/**
-	 * If-None-Match uses the weak comparison.
-	 *
-	 * @dataProvider etag_provider
-	 * @covers ::etag_matches
-	 *
-	 * @param string $header   The If-None-Match header.
-	 * @param bool   $expected Whether it matches.
-	 */
-	public function test_etag_matches( string $header, bool $expected ) {
-		$this->assertSame( $expected, Socialspec::etag_matches( '"abc"', $header ) );
-	}
-
-	/**
-	 * If-None-Match headers.
-	 *
-	 * @return array[] Test cases.
-	 */
-	public function etag_provider(): array {
-		return array(
-			'empty'     => array( '', false ),
-			'match'     => array( '"abc"', true ),
-			'weak'      => array( 'W/"abc"', true ),
-			'list'      => array( '"x", W/"abc" , "y"', true ),
-			'wildcard'  => array( '*', true ),
-			'no match'  => array( '"abcd"', false ),
-			'unquoted'  => array( 'abc', false ),
-			'only weak' => array( 'W/', false ),
-		);
-	}
-
-	/**
 	 * Without the rewrite rule the request path is matched.
 	 *
 	 * @covers ::get_requested_name

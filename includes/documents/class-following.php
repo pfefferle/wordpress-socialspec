@@ -42,11 +42,11 @@ final class Following implements Document {
 	}
 
 	/**
-	 * Renders the OPML document.
+	 * Prints the OPML document, with an empty body if no feeds are followed.
 	 *
-	 * @return string|null The OPML document, with an empty body if no feeds are followed, or null if a filter removed it.
+	 * @return bool Always true.
 	 */
-	public function render(): ?string {
+	public function render(): bool {
 		/**
 		 * Filters the feeds listed in /.well-known/following.opml.
 		 *
@@ -65,7 +65,6 @@ final class Following implements Document {
 		$outlines = \apply_filters( 'socialspec_following', $this->get_bookmarks() );
 		$outlines = \array_values( \array_filter( \array_map( array( self::class, 'sanitize_outline' ), (array) $outlines ) ) );
 
-		\ob_start();
 		\load_template(
 			SOCIALSPEC_PLUGIN_DIR . 'templates/following-opml.php',
 			false,
@@ -75,17 +74,8 @@ final class Following implements Document {
 				'translations' => \load_script_textdomain( self::SCRIPT, 'socialspec' ),
 			)
 		);
-		$opml = (string) \ob_get_clean();
 
-		/**
-		 * Filters the /.well-known/following.opml document.
-		 *
-		 * @param string|null $opml     The OPML document, null to send a 404.
-		 * @param array[]     $outlines The outlines.
-		 */
-		$opml = \apply_filters( 'socialspec_following_opml', $opml, $outlines );
-
-		return \is_string( $opml ) ? $opml : null;
+		return true;
 	}
 
 	/**

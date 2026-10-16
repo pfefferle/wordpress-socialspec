@@ -31,7 +31,7 @@ class Test_Contact extends \WP_UnitTestCase {
 		\update_option( 'blogname', 'Jordan &amp; Co' );
 		\update_option( 'blogdescription', 'Explorer, optimist; walker' );
 
-		$vcard = ( new Contact() )->render();
+		$vcard = $this->render( new Contact() );
 		$host  = \wp_parse_url( \home_url(), PHP_URL_HOST );
 
 		$this->assertStringStartsWith( "BEGIN:VCARD\r\nVERSION:3.0\r\n", $vcard );
@@ -73,7 +73,7 @@ class Test_Contact extends \WP_UnitTestCase {
 		};
 		\add_filter( 'socialspec_vcard_properties', $filter, 10, 2 );
 
-		$vcard = ( new Contact() )->render();
+		$vcard = $this->render( new Contact() );
 		$host  = \wp_parse_url( \home_url(), PHP_URL_HOST );
 
 		$this->assertStringContainsString( "\r\nFN:Jordan Doe\r\n", $vcard );
@@ -88,7 +88,7 @@ class Test_Contact extends \WP_UnitTestCase {
 
 		// No avatar where the site hides avatars.
 		\update_option( 'show_avatars', 0 );
-		$this->assertStringNotContainsString( 'PHOTO', ( new Contact() )->render() );
+		$this->assertStringNotContainsString( 'PHOTO', $this->render( new Contact() ) );
 	}
 
 	/**
@@ -100,7 +100,7 @@ class Test_Contact extends \WP_UnitTestCase {
 		\update_option( 'blogname', 'The Site' );
 		\update_option( 'socialspec_user', 999999 );
 
-		$this->assertStringContainsString( "\r\nFN:The Site\r\n", ( new Contact() )->render() );
+		$this->assertStringContainsString( "\r\nFN:The Site\r\n", $this->render( new Contact() ) );
 	}
 
 	/**
@@ -124,7 +124,7 @@ class Test_Contact extends \WP_UnitTestCase {
 			}
 		);
 
-		$vcard = ( new Contact() )->render();
+		$vcard = $this->render( new Contact() );
 
 		$this->assertStringContainsString( "\r\nEMAIL;TYPE=INTERNET,PREF:hi@example.com\r\n", $vcard );
 		$this->assertStringContainsString( "\r\nitem1.URL:https://example.com/a,b;c\r\n", $vcard );
@@ -144,7 +144,7 @@ class Test_Contact extends \WP_UnitTestCase {
 		$note = \str_repeat( "Gr\u{fc}\u{df}e ", 40 );
 		\add_filter( 'socialspec_vcard_properties', static fn (): array => array( array( 'NOTE', $note ) ) );
 
-		$vcard = ( new Contact() )->render();
+		$vcard = $this->render( new Contact() );
 
 		foreach ( \explode( "\r\n", $vcard ) as $line ) {
 			$this->assertLessThanOrEqual( 75, \strlen( $line ) );
@@ -162,7 +162,7 @@ class Test_Contact extends \WP_UnitTestCase {
 	 */
 	public function test_render_filtered_away() {
 		\add_filter( 'socialspec_vcard', '__return_false' );
-		$this->assertNull( ( new Contact() )->render() );
+		$this->assertNull( $this->render( new Contact() ) );
 		\remove_filter( 'socialspec_vcard', '__return_false' );
 	}
 
@@ -180,6 +180,21 @@ class Test_Contact extends \WP_UnitTestCase {
 		);
 		\update_option( 'socialspec_user', $user_id );
 
-		$this->assertStringContainsString( "\r\nNOTE:I write about <code> and tags\r\n", ( new Contact() )->render() );
+		$this->assertStringContainsString( "\r\nNOTE:I write about <code> and tags\r\n", $this->render( new Contact() ) );
+	}
+
+	/**
+	 * Prints a document and returns the output.
+	 *
+	 * @param \Socialspec\Document $document The document.
+	 *
+	 * @return string|null The output, or null if there is nothing to publish.
+	 */
+	private function render( \Socialspec\Document $document ): ?string {
+		\ob_start();
+		$published = $document->render();
+		$output    = (string) \ob_get_clean();
+
+		return $published ? $output : null;
 	}
 }

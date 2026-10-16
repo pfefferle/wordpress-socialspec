@@ -20,7 +20,7 @@ class Test_About extends \WP_UnitTestCase {
 	 * @covers ::render
 	 */
 	public function test_render_without_page() {
-		$this->assertNull( ( new About() )->render() );
+		$this->assertNull( $this->render( new About() ) );
 	}
 
 	/**
@@ -40,7 +40,7 @@ class Test_About extends \WP_UnitTestCase {
 
 		$this->assertSame(
 			"# About \u{201c}Jordan\u{201d}\n\nI am an **outdoor** enthusiast.\n\n- [Example](https://example.com/)\n",
-			( new About() )->render()
+			$this->render( new About() )
 		);
 	}
 
@@ -59,7 +59,7 @@ class Test_About extends \WP_UnitTestCase {
 			)
 		);
 
-		$this->assertStringContainsString( 'Two', ( new About() )->render() );
+		$this->assertStringContainsString( 'Two', $this->render( new About() ) );
 	}
 
 	/**
@@ -76,7 +76,7 @@ class Test_About extends \WP_UnitTestCase {
 			)
 		);
 
-		$this->assertNull( ( new About() )->render() );
+		$this->assertNull( $this->render( new About() ) );
 
 		\wp_update_post(
 			array(
@@ -86,7 +86,7 @@ class Test_About extends \WP_UnitTestCase {
 			)
 		);
 
-		$this->assertNull( ( new About() )->render() );
+		$this->assertNull( $this->render( new About() ) );
 	}
 
 	/**
@@ -106,7 +106,7 @@ class Test_About extends \WP_UnitTestCase {
 
 		$filter   = static fn () => $page_id;
 		\add_filter( 'socialspec_about_page', $filter );
-		$markdown = ( new About() )->render();
+		$markdown = $this->render( new About() );
 		\remove_filter( 'socialspec_about_page', $filter );
 
 		$this->assertSame( "# Me\n\nHello\n", $markdown );
@@ -136,7 +136,7 @@ class Test_About extends \WP_UnitTestCase {
 		);
 
 		\update_option( 'socialspec_about_page', $selected );
-		$this->assertSame( "# Hello\n\nSelected\n", ( new About() )->render() );
+		$this->assertSame( "# Hello\n\nSelected\n", $this->render( new About() ) );
 
 		// An unpublished selection falls back to the /about page.
 		\wp_update_post(
@@ -145,7 +145,7 @@ class Test_About extends \WP_UnitTestCase {
 				'post_status' => 'draft',
 			)
 		);
-		$this->assertSame( "# About\n\nSlug\n", ( new About() )->render() );
+		$this->assertSame( "# About\n\nSlug\n", $this->render( new About() ) );
 	}
 
 	/**
@@ -162,14 +162,14 @@ class Test_About extends \WP_UnitTestCase {
 			)
 		);
 
-		$this->assertNull( ( new About() )->render() );
+		$this->assertNull( $this->render( new About() ) );
 
 		\update_option( 'socialspec_user', $user_id );
-		$this->assertSame( "# Jordan & Doe\n\nEager explorer.\n\nLikes the **long way** home.\n", ( new About() )->render() );
+		$this->assertSame( "# Jordan & Doe\n\nEager explorer.\n\nLikes the **long way** home.\n", $this->render( new About() ) );
 
 		// A user without biographical info has nothing to publish.
 		\update_user_meta( $user_id, 'description', '' );
-		$this->assertNull( ( new About() )->render() );
+		$this->assertNull( $this->render( new About() ) );
 	}
 
 	/**
@@ -187,7 +187,7 @@ class Test_About extends \WP_UnitTestCase {
 		);
 
 		$GLOBALS['post'] = \get_post( $post_id ); // phpcs:ignore WordPress.WP.GlobalVariablesOverride.Prohibited
-		( new About() )->render();
+		$this->render( new About() );
 
 		$this->assertSame( $post_id, $GLOBALS['post']->ID );
 	}
@@ -206,7 +206,7 @@ class Test_About extends \WP_UnitTestCase {
 		);
 
 		\add_filter( 'socialspec_about_md', '__return_false' );
-		$this->assertNull( ( new About() )->render() );
+		$this->assertNull( $this->render( new About() ) );
 		\remove_filter( 'socialspec_about_md', '__return_false' );
 	}
 
@@ -227,7 +227,22 @@ class Test_About extends \WP_UnitTestCase {
 		// kses removes the tag on save for users without unfiltered_html.
 		$title = static fn (): string => 'One<br>Two';
 		\add_filter( 'the_title', $title );
-		$this->assertStringStartsWith( "# One Two\n\n", ( new About() )->render() );
+		$this->assertStringStartsWith( "# One Two\n\n", $this->render( new About() ) );
 		\remove_filter( 'the_title', $title );
+	}
+
+	/**
+	 * Prints a document and returns the output.
+	 *
+	 * @param \Socialspec\Document $document The document.
+	 *
+	 * @return string|null The output, or null if there is nothing to publish.
+	 */
+	private function render( \Socialspec\Document $document ): ?string {
+		\ob_start();
+		$published = $document->render();
+		$output    = (string) \ob_get_clean();
+
+		return $published ? $output : null;
 	}
 }

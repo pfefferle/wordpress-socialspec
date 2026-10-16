@@ -108,7 +108,6 @@ final class Socialspec {
 		if ( 'OPTIONS' === $method ) {
 			\status_header( 204 );
 			\header( 'Access-Control-Allow-Methods: GET, HEAD, OPTIONS' );
-			\header( 'Access-Control-Allow-Headers: If-None-Match' );
 			\header( 'Access-Control-Max-Age: 86400' );
 			exit;
 		}
@@ -118,28 +117,18 @@ final class Socialspec {
 			self::send_error( 405, 'Method Not Allowed' );
 		}
 
-		$body = $document->render();
-
-		if ( null === $body ) {
-			self::send_error( 404, 'Not Found' );
-		}
-
-		$etag = '"' . \md5( $body ) . '"';
-
+		\status_header( 200 );
 		\header( 'Content-Type: ' . $document->get_content_type() . '; charset=' . \get_bloginfo( 'charset' ) );
-		\header( 'ETag: ' . $etag );
-		\header( 'Access-Control-Expose-Headers: ETag' );
 		\header( 'X-Content-Type-Options: nosniff' );
 
-		if ( self::etag_matches( $etag, \wp_unslash( $_SERVER['HTTP_IF_NONE_MATCH'] ?? '' ) ) ) { // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Only compared.
-			\status_header( 304 );
+		// Like WordPress, HEAD requests get the headers only.
+		if ( 'HEAD' === $method ) {
 			exit;
 		}
 
-		\status_header( 200 );
-
-		if ( 'HEAD' !== $method ) {
-			echo $body; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Escaped by the document.
+		// Nothing is printed yet, so the headers can still change.
+		if ( ! $document->render() ) {
+			self::send_error( 404, 'Not Found' );
 		}
 
 		exit;
@@ -167,38 +156,6 @@ final class Socialspec {
 		$prefix = \trailingslashit( (string) \wp_parse_url( \home_url(), PHP_URL_PATH ) ) . '.well-known/';
 
 		return \str_starts_with( $path, $prefix ) ? \substr( $path, \strlen( $prefix ) ) : null;
-	}
-
-	/**
-	 * Whether an If-None-Match header matches an entity tag.
-	 *
-	 * Uses the weak comparison of RFC 9110, section 13.1.2.
-	 *
-	 * @param string $etag   The entity tag of the response.
-	 * @param string $header The If-None-Match request header.
-	 *
-	 * @return bool True if the client has the current version.
-	 */
-	public static function etag_matches( string $etag, string $header ): bool {
-		$header = \trim( $header );
-
-		if ( '*' === $header ) {
-			return true;
-		}
-
-		foreach ( \explode( ',', $header ) as $candidate ) {
-			$candidate = \trim( $candidate );
-
-			if ( \str_starts_with( $candidate, 'W/' ) ) {
-				$candidate = \substr( $candidate, 2 );
-			}
-
-			if ( '' !== $candidate && $candidate === $etag ) {
-				return true;
-			}
-		}
-
-		return false;
 	}
 
 	/**
