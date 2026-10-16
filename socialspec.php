@@ -11,6 +11,7 @@
  * License: MIT
  * License URI: https://opensource.org/licenses/MIT
  * Text Domain: socialspec
+ * Update URI: https://github.com/pfefferle/wordpress-socialspec
  *
  * @package Socialspec
  */
