@@ -78,7 +78,8 @@ class Test_Contact extends \WP_UnitTestCase {
 
 		$this->assertStringContainsString( "\r\nFN:Jordan Doe\r\n", $vcard );
 		$this->assertStringContainsString( "\r\nN:Doe;Jordan;;;\r\n", $vcard );
-		$this->assertStringContainsString( "\r\nURL:https://jordandoe.example/\r\n", $vcard );
+		$this->assertStringContainsString( "\r\nURL:https://jordandoe.example/\r\nURL:" . \home_url( '/' ) . "\r\n", $vcard );
+		$this->assertStringNotContainsString( \get_author_posts_url( $user_id ), $vcard );
 		$this->assertStringContainsString( "\r\nNOTE:Explorer\\, optimist\r\n", $vcard );
 		$this->assertStringContainsString( "\r\nPHOTO;VALUE=uri:", $vcard );
 		$this->assertStringContainsString( "\r\nNICKNAME:@{$host}\r\n", $vcard );
@@ -89,6 +90,21 @@ class Test_Contact extends \WP_UnitTestCase {
 		// No avatar where the site hides avatars.
 		\update_option( 'show_avatars', 0 );
 		$this->assertStringNotContainsString( 'PHOTO', $this->render( new Contact() ) );
+
+		// The author page once there are published posts.
+		self::factory()->post->create( array( 'post_author' => $user_id ) );
+		$this->assertStringContainsString( "\r\nURL:" . \get_author_posts_url( $user_id ) . "\r\n", $this->render( new Contact() ) );
+	}
+
+	/**
+	 * Without a website the blog is the first link, listed once.
+	 *
+	 * @covers ::render
+	 */
+	public function test_render_user_without_website() {
+		\update_option( 'socialspec_user', self::factory()->user->create( array( 'role' => 'author' ) ) );
+
+		$this->assertSame( 1, \substr_count( $this->render( new Contact() ), "\r\nURL:" ) );
 	}
 
 	/**

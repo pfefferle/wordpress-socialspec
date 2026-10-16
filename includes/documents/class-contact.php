@@ -126,7 +126,7 @@ final class Contact implements Document {
 	}
 
 	/**
-	 * The properties of a user: name, website, biographical info and avatar.
+	 * The properties of a user: name, links, biographical info and avatar.
 	 *
 	 * @param \WP_User $user The user.
 	 *
@@ -136,8 +136,17 @@ final class Contact implements Document {
 		$properties = array(
 			array( 'FN', self::decode( $user->display_name ) ),
 			array( 'N', array( self::decode( $user->last_name ), self::decode( $user->first_name ), '', '', '' ) ),
-			array( 'URL', $user->user_url ? $user->user_url : \home_url( '/' ) ),
 		);
+
+		// The website, the blog and, if there are posts, the author page.
+		$urls = array( $user->user_url, \home_url( '/' ) );
+		if ( \count_user_posts( $user->ID, 'post', true ) ) {
+			$urls[] = \get_author_posts_url( $user->ID );
+		}
+
+		foreach ( \array_unique( \array_filter( $urls ) ) as $url ) {
+			$properties[] = array( 'URL', $url );
+		}
 
 		$description = \trim( self::decode( \wp_strip_all_tags( \get_the_author_meta( 'description', $user->ID ) ) ) );
 		if ( '' !== $description ) {
