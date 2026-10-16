@@ -153,89 +153,93 @@
 		);
 	};
 
-	const title = opml.querySelector( 'head > title' )?.textContent || __( 'Subscription list', DOMAIN );
-	const modified = opml.querySelector( 'head > dateModified' )?.textContent;
-	const outlines = [ ...opml.querySelectorAll( 'body > outline' ) ];
+	// Chrome ignores defer in XML documents and runs the script before the
+	// rest of the document is parsed.
+	document.addEventListener( 'DOMContentLoaded', () => {
+		const title = opml.querySelector( 'head > title' )?.textContent || __( 'Subscription list', DOMAIN );
+		const modified = opml.querySelector( 'head > dateModified' )?.textContent;
+		const outlines = [ ...opml.querySelectorAll( 'body > outline' ) ];
 
-	const style = `
-		:root { color-scheme: light dark; --accent: #2271b1; --muted: #646970; --line: #dcdcde; --intro: #f0f6fc; }
-		@media (prefers-color-scheme: dark) { :root { --accent: #72aee6; --muted: #a7aaad; --line: #3c434a; --intro: #1d2327; } }
-		* { box-sizing: border-box; }
-		body { margin: 0; font-family: system-ui, sans-serif; line-height: 1.6; }
-		a { color: var(--accent); }
-		.container { max-width: 46rem; margin: auto; padding: 0 1rem; }
-		.intro { background: var(--intro); padding: 1.5rem 0; margin-bottom: 2rem; }
-		.intro .container { display: grid; grid-template-columns: 1fr auto; gap: 1rem; align-items: center; }
-		.intro p { margin: 0.25rem 0; }
-		.intro img { width: 5rem; height: 5rem; }
-		@media (min-width: 40rem) { .intro img { width: 8rem; height: 8rem; } }
-		h1, h2, h3, h4, h5, h6 { margin: 0; line-height: 1.3; }
-		h1 { font-size: 2rem; }
-		article, .group { margin-bottom: 1.5rem; }
-		.group > :first-child { font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); border-bottom: 1px solid var(--line); padding-bottom: 0.4rem; margin-bottom: 1rem; }
-		.meta { color: var(--muted); margin: 0.25rem 0; }
-		.address { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.25rem 0.6rem; margin: 0.25rem 0; }
-		.format { font-size: 0.8rem; font-weight: 600; text-transform: uppercase; color: var(--muted); min-width: 3.5rem; }
-		.url { flex: 1; min-width: 0; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.85rem; word-break: break-all; }
-		.subscribe { font-size: 0.8rem; text-decoration: none; white-space: nowrap; border: 1px solid var(--line); border-radius: 6px; padding: 0.1em 0.7em; }
-		.subscribe:hover { border-color: var(--accent); }
-	`;
+		const style = `
+			:root { color-scheme: light dark; --accent: #2271b1; --muted: #646970; --line: #dcdcde; --intro: #f0f6fc; }
+			@media (prefers-color-scheme: dark) { :root { --accent: #72aee6; --muted: #a7aaad; --line: #3c434a; --intro: #1d2327; } }
+			* { box-sizing: border-box; }
+			body { margin: 0; font-family: system-ui, sans-serif; line-height: 1.6; }
+			a { color: var(--accent); }
+			.container { max-width: 46rem; margin: auto; padding: 0 1rem; }
+			.intro { background: var(--intro); padding: 1.5rem 0; margin-bottom: 2rem; }
+			.intro .container { display: grid; grid-template-columns: 1fr auto; gap: 1rem; align-items: center; }
+			.intro p { margin: 0.25rem 0; }
+			.intro img { width: 5rem; height: 5rem; }
+			@media (min-width: 40rem) { .intro img { width: 8rem; height: 8rem; } }
+			h1, h2, h3, h4, h5, h6 { margin: 0; line-height: 1.3; }
+			h1 { font-size: 2rem; }
+			article, .group { margin-bottom: 1.5rem; }
+			.group > :first-child { font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); border-bottom: 1px solid var(--line); padding-bottom: 0.4rem; margin-bottom: 1rem; }
+			.meta { color: var(--muted); margin: 0.25rem 0; }
+			.address { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.25rem 0.6rem; margin: 0.25rem 0; }
+			.format { font-size: 0.8rem; font-weight: 600; text-transform: uppercase; color: var(--muted); min-width: 3.5rem; }
+			.url { flex: 1; min-width: 0; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.85rem; word-break: break-all; }
+			.subscribe { font-size: 0.8rem; text-decoration: none; white-space: nowrap; border: 1px solid var(--line); border-radius: 6px; padding: 0.1em 0.7em; }
+			.subscribe:hover { border-color: var(--accent); }
+		`;
 
-	const html = el(
-		'html',
-		lang ? { lang } : {},
-		el(
-			'head',
-			{},
-			el( 'meta', { name: 'viewport', content: 'width=device-width, initial-scale=1' } ),
-			el( 'title', {}, title ),
-			el( 'style', {}, style )
-		),
-		el(
-			'body',
-			{},
+		const html = el(
+			'html',
+			lang ? { lang } : {},
 			el(
-				'header',
-				{ class: 'intro' },
-				el(
-					'div',
-					{ class: 'container' },
-					el(
-						'div',
-						{},
-						el(
-							'p',
-							{},
-							el( 'strong', {}, __( 'This is an OPML subscription list.', DOMAIN ) ),
-							' ',
-							__( 'Feed readers use OPML to share and move a collection of subscriptions.', DOMAIN )
-						),
-						el(
-							'p',
-							{},
-							el(
-								'small',
-								{},
-								__( 'Copy the address of this page and use the import feature of your feed reader to add the whole list at once.', DOMAIN ),
-								' ',
-								el( 'a', { href: 'https://opml.org/' }, __( 'Learn more about OPML', DOMAIN ) )
-							)
-						)
-					),
-					icon ? el( 'img', { src: icon, alt: '' } ) : null
-				)
+				'head',
+				{},
+				el( 'meta', { name: 'viewport', content: 'width=device-width, initial-scale=1' } ),
+				el( 'title', {}, title ),
+				el( 'style', {}, style )
 			),
 			el(
-				'main',
-				{ class: 'container' },
-				el( 'h1', {}, title ),
-				modified ? el( 'p', { class: 'meta' }, modified ) : null,
-				...( outlines.length
-					? outlines.map( ( outline ) => render( outline, 2 ) )
-					: [ el( 'p', {}, __( 'This list is empty.', DOMAIN ) ) ] )
+				'body',
+				{},
+				el(
+					'header',
+					{ class: 'intro' },
+					el(
+						'div',
+						{ class: 'container' },
+						el(
+							'div',
+							{},
+							el(
+								'p',
+								{},
+								el( 'strong', {}, __( 'This is an OPML subscription list.', DOMAIN ) ),
+								' ',
+								__( 'Feed readers use OPML to share and move a collection of subscriptions.', DOMAIN )
+							),
+							el(
+								'p',
+								{},
+								el(
+									'small',
+									{},
+									__( 'Copy the address of this page and use the import feature of your feed reader to add the whole list at once.', DOMAIN ),
+									' ',
+									el( 'a', { href: 'https://opml.org/' }, __( 'Learn more about OPML', DOMAIN ) )
+								)
+							)
+						),
+						icon ? el( 'img', { src: icon, alt: '' } ) : null
+					)
+				),
+				el(
+					'main',
+					{ class: 'container' },
+					el( 'h1', {}, title ),
+					modified ? el( 'p', { class: 'meta' }, modified ) : null,
+					...( outlines.length
+						? outlines.map( ( outline ) => render( outline, 2 ) )
+						: [ el( 'p', {}, __( 'This list is empty.', DOMAIN ) ) ] )
+				)
 			)
-		)
-	);
+		);
 
-	opml.replaceWith( html );
+		opml.replaceWith( html );
+	} );
 } )();
