@@ -31,13 +31,14 @@ final class Following implements Document {
 	/**
 	 * The media type.
 	 *
-	 * Browsers download OPML, but show XML, with the script that turns it
-	 * into a page.
+	 * FollowSpec uses `text/x-opml` in its examples, but browsers download
+	 * that. As XML they show it, with the script that turns it into a page.
+	 * Feed readers parse it with any XML library either way.
 	 *
 	 * @return string The media type.
 	 */
 	public function get_content_type(): string {
-		return self::is_browser() ? 'application/xml' : 'text/x-opml';
+		return 'application/xml';
 	}
 
 	/**
@@ -64,16 +65,14 @@ final class Following implements Document {
 		$outlines = \apply_filters( 'socialspec_following', $this->get_bookmarks() );
 		$outlines = \array_values( \array_filter( \array_map( array( self::class, 'sanitize_outline' ), (array) $outlines ) ) );
 
-		$browser = self::is_browser();
-
 		\ob_start();
 		\load_template(
 			SOCIALSPEC_PLUGIN_DIR . 'templates/following-opml.php',
 			false,
 			array(
 				'outlines'     => $outlines,
-				'scripts'      => $browser ? self::get_script_urls() : array(),
-				'translations' => $browser ? \load_script_textdomain( self::SCRIPT, 'socialspec' ) : false,
+				'scripts'      => self::get_script_urls(),
+				'translations' => \load_script_textdomain( self::SCRIPT, 'socialspec' ),
 			)
 		);
 		$opml = (string) \ob_get_clean();
@@ -87,17 +86,6 @@ final class Following implements Document {
 		$opml = \apply_filters( 'socialspec_following_opml', $opml, $outlines );
 
 		return \is_string( $opml ) ? $opml : null;
-	}
-
-	/**
-	 * Whether the request comes from a browser, that prefers a page.
-	 *
-	 * @return bool True if the client accepts HTML.
-	 */
-	private static function is_browser(): bool {
-		$accept = \sanitize_text_field( \wp_unslash( $_SERVER['HTTP_ACCEPT'] ?? '' ) );
-
-		return \str_contains( $accept, 'text/html' );
 	}
 
 	/**

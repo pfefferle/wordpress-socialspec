@@ -18,7 +18,6 @@ class Test_Following extends \WP_UnitTestCase {
 	 * Removes the test filters.
 	 */
 	public function tear_down() {
-		unset( $_SERVER['HTTP_ACCEPT'] );
 		\remove_all_filters( 'socialspec_following' );
 		\remove_all_filters( 'pre_load_script_translations' );
 		parent::tear_down();
@@ -179,18 +178,14 @@ class Test_Following extends \WP_UnitTestCase {
 	}
 
 	/**
-	 * Browsers get XML with the script that shows the OPML as a page.
+	 * The OPML is XML with the script that shows it as a page in the browser.
 	 *
 	 * @covers ::get_content_type
 	 * @covers ::render
 	 */
-	public function test_render_for_browsers() {
+	public function test_render_scripts() {
 		$following = new Following();
 
-		$this->assertSame( 'text/x-opml', $following->get_content_type() );
-		$this->assertStringNotContainsString( '<script', $following->render() );
-
-		$_SERVER['HTTP_ACCEPT'] = 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8';
 		\add_filter( 'pre_load_script_translations', static fn (): string => '{"locale_data":{"messages":{"":{"lang":"de_DE"},"Feed":["Feed <&>"]}}}' );
 
 		$opml = $following->render();

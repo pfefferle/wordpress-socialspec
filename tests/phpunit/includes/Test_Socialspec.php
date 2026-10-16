@@ -25,7 +25,7 @@ class Test_Socialspec extends \WP_UnitTestCase {
 		$documents = Socialspec::get_documents();
 
 		$this->assertSame( array( 'following.opml', 'about.md', 'contact.vcf' ), \array_keys( $documents ) );
-		$this->assertSame( 'text/x-opml', $documents['following.opml']->get_content_type() );
+		$this->assertSame( 'application/xml', $documents['following.opml']->get_content_type() );
 		$this->assertSame( 'text/markdown', $documents['about.md']->get_content_type() );
 		$this->assertSame( 'text/vcard', $documents['contact.vcf']->get_content_type() );
 	}

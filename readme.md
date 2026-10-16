@@ -52,7 +52,7 @@ If you chose a user in the settings, the card shows their display name, first an
 
 WordPress has no list of blogs you follow, so other plugins add them. **Settings → SocialSpec** shows which plugins currently do. If you still use the old WordPress Link Manager, links with an RSS address are included too. Without any of these, the list is empty.
 
-Open the list in your browser and you see a readable page, with a "Subscribe" button for every feed. Feed readers still get the plain OPML file.
+Open the list in your browser and you see a readable page, with a "Subscribe" button for every feed. Feed readers ignore the script and read the list as before.
 
 ## Frequently Asked Questions
 
