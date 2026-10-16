@@ -130,6 +130,8 @@ final class Socialspec {
 		\header( 'ETag: ' . $etag );
 		\header( 'Access-Control-Expose-Headers: ETag' );
 		\header( 'X-Content-Type-Options: nosniff' );
+		// Browsers get the OPML as XML, to show it as a page.
+		\header( 'Vary: Accept' );
 
 		if ( self::etag_matches( $etag, \wp_unslash( $_SERVER['HTTP_IF_NONE_MATCH'] ?? '' ) ) ) { // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Only compared.
 			\status_header( 304 );

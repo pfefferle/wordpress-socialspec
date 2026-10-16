@@ -18,7 +18,9 @@ class Test_Following extends \WP_UnitTestCase {
 	 * Removes the test filters.
 	 */
 	public function tear_down() {
+		unset( $_SERVER['HTTP_ACCEPT'] );
 		\remove_all_filters( 'socialspec_following' );
+		\remove_all_filters( 'pre_load_script_translations' );
 		parent::tear_down();
 	}
 
@@ -174,5 +176,31 @@ class Test_Following extends \WP_UnitTestCase {
 		$this->assertNotFalse( $xml, 'The OPML is well-formed XML.' );
 		$this->assertCount( 1, $xml->body->outline );
 		$this->assertSame( $text, (string) $xml->body->outline[0]['text'] );
+	}
+
+	/**
+	 * Browsers get XML with the script that shows the OPML as a page.
+	 *
+	 * @covers ::get_content_type
+	 * @covers ::render
+	 */
+	public function test_render_for_browsers() {
+		$following = new Following();
+
+		$this->assertSame( 'text/x-opml', $following->get_content_type() );
+		$this->assertStringNotContainsString( '<script', $following->render() );
+
+		$_SERVER['HTTP_ACCEPT'] = 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8';
+		\add_filter( 'pre_load_script_translations', static fn (): string => '{"locale_data":{"messages":{"":{"lang":"de_DE"},"Feed":["Feed <&>"]}}}' );
+
+		$opml = $following->render();
+		$xml  = \simplexml_load_string( $opml );
+
+		$this->assertSame( 'application/xml', $following->get_content_type() );
+		$this->assertNotFalse( $xml, 'The OPML is well-formed XML.' );
+
+		// The dependencies first, the translations escaped for XML.
+		$this->assertMatchesRegularExpression( '#/hooks(\.min)?\.js\?ver=.*/i18n(\.min)?\.js\?ver=.*/assets/js/opml\.js\?ver=' . \preg_quote( SOCIALSPEC_VERSION, '#' ) . '"#s', $opml );
+		$this->assertStringContainsString( 'id="opml-translations">{"locale_data":{"messages":{"":{"lang":"de_DE"},"Feed":["Feed &lt;&amp;&gt;"]}}}</script>', $opml );
 	}
 }

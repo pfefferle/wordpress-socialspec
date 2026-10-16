@@ -24,12 +24,20 @@ final class Following implements Document {
 	private const URL_ATTRIBUTES = array( 'htmlUrl', 'xmlUrl', 'url' );
 
 	/**
+	 * The handle of the script that shows OPML in the browser.
+	 */
+	private const SCRIPT = 'socialspec-opml';
+
+	/**
 	 * The media type.
+	 *
+	 * Browsers download OPML, but show XML, with the script that turns it
+	 * into a page.
 	 *
 	 * @return string The media type.
 	 */
 	public function get_content_type(): string {
-		return 'text/x-opml';
+		return self::is_browser() ? 'application/xml' : 'text/x-opml';
 	}
 
 	/**
@@ -56,8 +64,18 @@ final class Following implements Document {
 		$outlines = \apply_filters( 'socialspec_following', $this->get_bookmarks() );
 		$outlines = \array_values( \array_filter( \array_map( array( self::class, 'sanitize_outline' ), (array) $outlines ) ) );
 
+		$browser = self::is_browser();
+
 		\ob_start();
-		\load_template( SOCIALSPEC_PLUGIN_DIR . 'templates/following-opml.php', false, array( 'outlines' => $outlines ) );
+		\load_template(
+			SOCIALSPEC_PLUGIN_DIR . 'templates/following-opml.php',
+			false,
+			array(
+				'outlines'     => $outlines,
+				'scripts'      => $browser ? self::get_script_urls() : array(),
+				'translations' => $browser ? \load_script_textdomain( self::SCRIPT, 'socialspec' ) : false,
+			)
+		);
 		$opml = (string) \ob_get_clean();
 
 		/**
@@ -69,6 +87,70 @@ final class Following implements Document {
 		$opml = \apply_filters( 'socialspec_following_opml', $opml, $outlines );
 
 		return \is_string( $opml ) ? $opml : null;
+	}
+
+	/**
+	 * Whether the request comes from a browser, that prefers a page.
+	 *
+	 * @return bool True if the client accepts HTML.
+	 */
+	private static function is_browser(): bool {
+		$accept = \sanitize_text_field( \wp_unslash( $_SERVER['HTTP_ACCEPT'] ?? '' ) );
+
+		return \str_contains( $accept, 'text/html' );
+	}
+
+	/**
+	 * The URLs of the script that shows OPML in the browser and of its
+	 * dependencies, in load order.
+	 *
+	 * The script is registered like any other, with wp-i18n for the
+	 * translations. An XML document has no wp_head(), so the URLs are
+	 * built from the registry like WP_Scripts does.
+	 *
+	 * @return string[] The script URLs.
+	 */
+	private static function get_script_urls(): array {
+		$scripts = \wp_scripts();
+
+		if ( ! $scripts->query( self::SCRIPT ) ) {
+			\wp_register_script(
+				self::SCRIPT,
+				\plugins_url( 'assets/js/opml.js', SOCIALSPEC_PLUGIN_DIR . 'socialspec.php' ),
+				array( 'wp-i18n' ),
+				SOCIALSPEC_VERSION,
+				array( 'strategy' => 'defer' )
+			);
+		}
+
+		$scripts->all_deps( self::SCRIPT );
+		$handles        = $scripts->to_do;
+		$scripts->to_do = array();
+		$urls           = array();
+
+		foreach ( $handles as $handle ) {
+			$script = $scripts->registered[ $handle ];
+
+			// Aliases like "jquery" have no source of their own.
+			if ( ! $script->src ) {
+				continue;
+			}
+
+			$src = $script->src;
+
+			if ( ! \preg_match( '|^(https?:)?//|', $src ) && ! ( $scripts->content_url && \str_starts_with( $src, $scripts->content_url ) ) ) {
+				$src = $scripts->base_url . $src;
+			}
+
+			if ( null !== $script->ver ) {
+				$src = \add_query_arg( 'ver', $script->ver ? $script->ver : $scripts->default_version, $src );
+			}
+
+			/** This filter is documented in wp-includes/class-wp-scripts.php */
+			$urls[] = (string) \apply_filters( 'script_loader_src', $src, $handle );
+		}
+
+		return $urls;
 	}
 
 	/**
