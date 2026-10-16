@@ -52,6 +52,8 @@ If you chose a user in the settings, the card shows their display name, first an
 
 WordPress has no list of blogs you follow, so other plugins add them. **Settings → SocialSpec** shows which plugins currently do. If you still use the old WordPress Link Manager, links with an RSS address are included too. Without any of these, the list is empty.
 
+Open the list in your browser and you see a readable page, with a "Subscribe" button for every feed. Feed readers ignore the script and read the list as before.
+
 ## Frequently Asked Questions
 
 ### Is my email address published?
@@ -76,7 +78,7 @@ Only partly. SocialSpec expects the files at the root of your domain, like `http
 
 ## For developers
 
-All three files are sent with `Access-Control-Allow-Origin: *`, so apps can load them from the browser. They support conditional requests with `ETag` and `If-None-Match`.
+All three files are sent with `Access-Control-Allow-Origin: *`, so apps can load them from the browser.
 
 ### Add the feeds you follow
 
@@ -119,11 +121,12 @@ add_filter( 'socialspec_documents', function ( array $documents ): array {
 
 Add the filter before `init`, because the rewrite rule is built there. Flush the rewrite rules once afterwards, for example on activation of your plugin.
 
-### All filters
+### All filters and actions
 
 * `socialspec_documents`: add, remove or replace documents (`Socialspec\Document`).
 * `socialspec_following`: the followed feeds, as OPML outline attributes.
-* `socialspec_following_opml`: the OPML document.
+* `socialspec_following_opml_head` (action): print more elements into the `<head>` of the OPML, e.g. `<ownerName>`.
+* `socialspec_following_opml_body` (action): print more outlines into the `<body>` of the OPML, e.g. nested ones.
 * `socialspec_about_page`: the page published as `about.md`.
 * `socialspec_about_md`: the Markdown document. It also gets the source (page or user) and the rendered HTML, for example to use another Markdown converter.
 * `socialspec_vcard_properties`: the vCard properties and the user who represents the site.

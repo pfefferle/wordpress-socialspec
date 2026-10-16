@@ -25,7 +25,7 @@ class Test_Socialspec extends \WP_UnitTestCase {
 		$documents = Socialspec::get_documents();
 
 		$this->assertSame( array( 'following.opml', 'about.md', 'contact.vcf' ), \array_keys( $documents ) );
-		$this->assertSame( 'text/x-opml', $documents['following.opml']->get_content_type() );
+		$this->assertSame( 'application/xml', $documents['following.opml']->get_content_type() );
 		$this->assertSame( 'text/markdown', $documents['about.md']->get_content_type() );
 		$this->assertSame( 'text/vcard', $documents['contact.vcf']->get_content_type() );
 	}
@@ -101,37 +101,6 @@ class Test_Socialspec extends \WP_UnitTestCase {
 		$this->assertSame( '', \get_query_var( 'well-known' ) );
 
 		\add_action( 'parse_request', array( Socialspec::class, 'parse_request' ) );
-	}
-
-	/**
-	 * If-None-Match uses the weak comparison.
-	 *
-	 * @dataProvider etag_provider
-	 * @covers ::etag_matches
-	 *
-	 * @param string $header   The If-None-Match header.
-	 * @param bool   $expected Whether it matches.
-	 */
-	public function test_etag_matches( string $header, bool $expected ) {
-		$this->assertSame( $expected, Socialspec::etag_matches( '"abc"', $header ) );
-	}
-
-	/**
-	 * If-None-Match headers.
-	 *
-	 * @return array[] Test cases.
-	 */
-	public function etag_provider(): array {
-		return array(
-			'empty'     => array( '', false ),
-			'match'     => array( '"abc"', true ),
-			'weak'      => array( 'W/"abc"', true ),
-			'list'      => array( '"x", W/"abc" , "y"', true ),
-			'wildcard'  => array( '*', true ),
-			'no match'  => array( '"abcd"', false ),
-			'unquoted'  => array( 'abc', false ),
-			'only weak' => array( 'W/', false ),
-		);
 	}
 
 	/**

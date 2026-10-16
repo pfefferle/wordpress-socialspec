@@ -24,20 +24,29 @@ final class Following implements Document {
 	private const URL_ATTRIBUTES = array( 'htmlUrl', 'xmlUrl', 'url' );
 
 	/**
+	 * The handle of the script that shows OPML in the browser.
+	 */
+	private const SCRIPT = 'socialspec-opml';
+
+	/**
 	 * The media type.
+	 *
+	 * FollowSpec uses `text/x-opml` in its examples, but browsers download
+	 * that. As XML they show it, with the script that turns it into a page.
+	 * Feed readers parse it with any XML library either way.
 	 *
 	 * @return string The media type.
 	 */
 	public function get_content_type(): string {
-		return 'text/x-opml';
+		return 'application/xml';
 	}
 
 	/**
-	 * Renders the OPML document.
+	 * Prints the OPML document, with an empty body if no feeds are followed.
 	 *
-	 * @return string|null The OPML document, with an empty body if no feeds are followed, or null if a filter removed it.
+	 * @return bool Always true.
 	 */
-	public function render(): ?string {
+	public function render(): bool {
 		/**
 		 * Filters the feeds listed in /.well-known/following.opml.
 		 *
@@ -56,19 +65,70 @@ final class Following implements Document {
 		$outlines = \apply_filters( 'socialspec_following', $this->get_bookmarks() );
 		$outlines = \array_values( \array_filter( \array_map( array( self::class, 'sanitize_outline' ), (array) $outlines ) ) );
 
-		\ob_start();
-		\load_template( SOCIALSPEC_PLUGIN_DIR . 'templates/following-opml.php', false, array( 'outlines' => $outlines ) );
-		$opml = (string) \ob_get_clean();
+		\load_template(
+			SOCIALSPEC_PLUGIN_DIR . 'templates/following-opml.php',
+			false,
+			array(
+				'outlines'     => $outlines,
+				'scripts'      => self::get_script_urls(),
+				'translations' => \load_script_textdomain( self::SCRIPT, 'socialspec' ),
+			)
+		);
 
-		/**
-		 * Filters the /.well-known/following.opml document.
-		 *
-		 * @param string|null $opml     The OPML document, null to send a 404.
-		 * @param array[]     $outlines The outlines.
-		 */
-		$opml = \apply_filters( 'socialspec_following_opml', $opml, $outlines );
+		return true;
+	}
 
-		return \is_string( $opml ) ? $opml : null;
+	/**
+	 * The URLs of the script that shows OPML in the browser and of its
+	 * dependencies, in load order.
+	 *
+	 * The script is registered like any other, with wp-i18n for the
+	 * translations. An XML document has no wp_head(), so the URLs are
+	 * built from the registry like WP_Scripts does.
+	 *
+	 * @return string[] The script URLs.
+	 */
+	private static function get_script_urls(): array {
+		$scripts = \wp_scripts();
+
+		if ( ! $scripts->query( self::SCRIPT ) ) {
+			\wp_register_script(
+				self::SCRIPT,
+				\plugins_url( 'assets/js/opml.js', SOCIALSPEC_PLUGIN_DIR . 'socialspec.php' ),
+				array( 'wp-i18n' ),
+				SOCIALSPEC_VERSION,
+				array( 'strategy' => 'defer' )
+			);
+		}
+
+		$scripts->all_deps( self::SCRIPT );
+		$handles        = $scripts->to_do;
+		$scripts->to_do = array();
+		$urls           = array();
+
+		foreach ( $handles as $handle ) {
+			$script = $scripts->registered[ $handle ];
+
+			// Aliases like "jquery" have no source of their own.
+			if ( ! $script->src ) {
+				continue;
+			}
+
+			$src = $script->src;
+
+			if ( ! \preg_match( '|^(https?:)?//|', $src ) && ! ( $scripts->content_url && \str_starts_with( $src, $scripts->content_url ) ) ) {
+				$src = $scripts->base_url . $src;
+			}
+
+			if ( null !== $script->ver ) {
+				$src = \add_query_arg( 'ver', $script->ver ? $script->ver : $scripts->default_version, $src );
+			}
+
+			/** This filter is documented in wp-includes/class-wp-scripts.php */
+			$urls[] = (string) \apply_filters( 'script_loader_src', $src, $handle );
+		}
+
+		return $urls;
 	}
 
 	/**

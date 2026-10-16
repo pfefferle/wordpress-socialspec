@@ -29,15 +29,15 @@ final class About implements Document {
 	}
 
 	/**
-	 * Renders the Markdown document.
+	 * Prints the Markdown document.
 	 *
 	 * Uses the page selected in the settings, the /about slash page
 	 * (https://slashpages.net/#about), or the biographical info of the user
 	 * who represents the site, in this order.
 	 *
-	 * @return string|null The Markdown document, or null if there is nothing to publish.
+	 * @return bool False if there is nothing to publish.
 	 */
-	public function render(): ?string {
+	public function render(): bool {
 		$page = self::get_public_page( (int) \get_option( 'socialspec_about_page' ) )
 			?? self::get_public_page( \get_page_by_path( 'about' ) );
 
@@ -56,7 +56,7 @@ final class About implements Document {
 			$source = \get_userdata( (int) \get_option( 'socialspec_user' ) );
 
 			if ( ! $source ) {
-				return null;
+				return false;
 			}
 
 			$title = \esc_html( $source->display_name );
@@ -69,7 +69,7 @@ final class About implements Document {
 		$markdown = Markdown::from_html( $html ) ?? \trim( \wp_kses_post( $html ) );
 
 		if ( '' === $markdown && $source instanceof \WP_User ) {
-			return null;
+			return false;
 		}
 
 		if ( '' !== $title ) {
@@ -85,7 +85,12 @@ final class About implements Document {
 		 */
 		$markdown = \apply_filters( 'socialspec_about_md', $markdown . "\n", $source, $html );
 
-		return \is_string( $markdown ) ? $markdown : null;
+		if ( ! \is_string( $markdown ) ) {
+			return false;
+		}
+
+		echo $markdown; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Markdown, not HTML.
+		return true;
 	}
 
 	/**

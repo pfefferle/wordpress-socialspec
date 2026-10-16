@@ -38,15 +38,15 @@ final class Contact implements Document {
 	}
 
 	/**
-	 * Renders the vCard.
+	 * Prints the vCard.
 	 *
 	 * Describes the user who represents the site, or the site itself.
 	 * No email address is published by default, the user and admin
 	 * emails are private.
 	 *
-	 * @return string|null The vCard, or null if a filter removed it.
+	 * @return bool False if a filter removed the vCard.
 	 */
-	public function render(): ?string {
+	public function render(): bool {
 		$host = (string) \wp_parse_url( \home_url(), PHP_URL_HOST );
 		$user = \get_userdata( (int) \get_option( 'socialspec_user' ) ) ?: null;
 
@@ -89,7 +89,12 @@ final class Contact implements Document {
 		 */
 		$vcard = \apply_filters( 'socialspec_vcard', \implode( "\r\n", $lines ) . "\r\n", $properties );
 
-		return \is_string( $vcard ) ? $vcard : null;
+		if ( ! \is_string( $vcard ) ) {
+			return false;
+		}
+
+		echo $vcard; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Escaped as vCard text.
+		return true;
 	}
 
 	/**
