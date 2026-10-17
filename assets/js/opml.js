@@ -80,14 +80,13 @@
 	};
 
 	/**
-	 * A list with one address, its format and an optional subscribe link.
+	 * A line with one address and its format.
 	 *
-	 * @param {string}  format    The format label, e.g. "Feed".
-	 * @param {string}  url       The address.
-	 * @param {boolean} subscribe Whether to add a subscribe link.
-	 * @return {Element|null} The list, or null without a web address.
+	 * @param {string} format The format label, e.g. "Feed".
+	 * @param {string} url    The address.
+	 * @return {Element|null} The line, or null without a web address.
 	 */
-	const address = ( format, url, subscribe ) => {
+	const address = ( format, url ) => {
 		const href = webUrl( url );
 
 		if ( ! href ) {
@@ -98,14 +97,7 @@
 			'p',
 			{ class: 'address' },
 			el( 'span', { class: 'format' }, format ),
-			el( 'a', { class: 'url', href }, href ),
-			subscribe
-				? el(
-						'a',
-						{ class: 'subscribe', href: 'feed:' + href },
-						__( 'Subscribe', DOMAIN )
-				  )
-				: null
+			el( 'a', { class: 'url', href }, href )
 		);
 	};
 
@@ -140,16 +132,23 @@
 				'article',
 				{},
 				el( heading, {}, text ),
-				address( 'include' === type ? 'OPML' : __( 'Link', DOMAIN ), url, false )
+				address( 'include' === type ? 'OPML' : __( 'Link', DOMAIN ), url )
 			);
 		}
+
+		const feed = webUrl( outline.getAttribute( 'xmlUrl' ) );
 
 		return el(
 			'article',
 			{},
-			el( heading, {}, link( outline.getAttribute( 'htmlUrl' ), text ) ),
+			el(
+				'div',
+				{ class: 'title' },
+				el( heading, {}, link( outline.getAttribute( 'htmlUrl' ), text ) ),
+				feed ? el( 'a', { class: 'subscribe', href: 'feed:' + feed }, __( 'Subscribe', DOMAIN ) ) : null
+			),
 			description ? el( 'p', { class: 'meta' }, description ) : null,
-			address( __( 'Feed', DOMAIN ), outline.getAttribute( 'xmlUrl' ), true )
+			address( __( 'Feed', DOMAIN ), feed )
 		);
 	};
 
@@ -178,19 +177,16 @@
 			h1:has(+ .meta) { margin-bottom: 0.25rem; }
 			h1 + .meta { margin-bottom: var(--gap); }
 			article, .group { margin-bottom: 1.5rem; }
-			article > :first-child { font-size: 1.25rem; }
+			article :is(h2, h3, h4, h5, h6) { font-size: 1.25rem; }
+			.title { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
 			.group > :first-child { font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); border-bottom: 1px solid var(--line); padding-bottom: 0.4rem; margin-bottom: 1rem; }
 			.meta { color: var(--muted); margin: 0.25rem 0; }
-			.address { display: grid; grid-template-columns: 3.5rem 1fr auto; align-items: baseline; gap: 0.25rem 0.6rem; margin: 0.5rem 0 0; }
-			.format { font-size: 0.8rem; font-weight: 600; text-transform: uppercase; color: var(--muted); }
-			.url { min-width: 0; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.85rem; word-break: break-all; }
-			@media (max-width: 32rem) {
-				.address { display: flex; flex-wrap: wrap; }
-				.url { flex-basis: 100%; order: 1; }
-				.subscribe { margin-left: auto; }
-			}
-			.subscribe { font-size: 0.8rem; text-decoration: none; white-space: nowrap; border: 1px solid var(--line); border-radius: 6px; padding: 0.1em 0.7em; }
-			.subscribe:hover { border-color: var(--accent); }
+			.address { display: flex; align-items: baseline; gap: 0.6rem; margin: 0.25rem 0 0; }
+			.format { font-size: 0.75rem; font-weight: 600; text-transform: uppercase; color: var(--muted); border: 1px solid var(--line); border-radius: 4px; padding: 0 0.4em; }
+			.url { min-width: 0; color: var(--muted); text-decoration: none; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.85rem; word-break: break-all; }
+			.url:hover { color: var(--accent); text-decoration: underline; }
+			.subscribe { font-size: 0.75rem; line-height: 1.4; text-decoration: none; white-space: nowrap; border: 1px solid var(--accent); border-radius: 4px; padding: 0.1em 0.6em; }
+			.subscribe:hover { background: var(--accent); color: Canvas; }
 		`;
 
 		const html = el(
