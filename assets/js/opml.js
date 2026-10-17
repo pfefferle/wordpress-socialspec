@@ -164,22 +164,31 @@
 			:root { color-scheme: light dark; --accent: #2271b1; --muted: #646970; --line: #dcdcde; --intro: #f0f6fc; }
 			@media (prefers-color-scheme: dark) { :root { --accent: #72aee6; --muted: #a7aaad; --line: #3c434a; --intro: #1d2327; } }
 			* { box-sizing: border-box; }
-			body { margin: 0; font-family: system-ui, sans-serif; line-height: 1.6; }
+			body { --gap: clamp(1.5rem, 5vw, 3rem); margin: 0; font-family: system-ui, sans-serif; line-height: 1.6; }
 			a { color: var(--accent); }
-			.container { max-width: 46rem; margin: auto; padding: 0 1rem; }
-			.intro { background: var(--intro); padding: 1.5rem 0; margin-bottom: 2rem; }
+			.container { max-width: 46rem; margin-inline: auto; padding-inline: 1rem; }
+			.intro { background: var(--intro); padding-block: calc(var(--gap) / 2); margin-bottom: var(--gap); }
+			main { padding-bottom: var(--gap); }
 			.intro .container { display: grid; grid-template-columns: 1fr auto; gap: 1rem; align-items: center; }
 			.intro p { margin: 0.25rem 0; }
 			.intro img { width: 5rem; height: 5rem; }
 			@media (min-width: 40rem) { .intro img { width: 8rem; height: 8rem; } }
 			h1, h2, h3, h4, h5, h6 { margin: 0; line-height: 1.3; }
-			h1 { font-size: 2rem; }
+			h1 { font-size: 2rem; margin-bottom: var(--gap); }
+			h1:has(+ .meta) { margin-bottom: 0.25rem; }
+			h1 + .meta { margin-bottom: var(--gap); }
 			article, .group { margin-bottom: 1.5rem; }
+			article > :first-child { font-size: 1.25rem; }
 			.group > :first-child { font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); border-bottom: 1px solid var(--line); padding-bottom: 0.4rem; margin-bottom: 1rem; }
 			.meta { color: var(--muted); margin: 0.25rem 0; }
-			.address { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.25rem 0.6rem; margin: 0.25rem 0; }
-			.format { font-size: 0.8rem; font-weight: 600; text-transform: uppercase; color: var(--muted); min-width: 3.5rem; }
-			.url { flex: 1; min-width: 0; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.85rem; word-break: break-all; }
+			.address { display: grid; grid-template-columns: 3.5rem 1fr auto; align-items: baseline; gap: 0.25rem 0.6rem; margin: 0.5rem 0 0; }
+			.format { font-size: 0.8rem; font-weight: 600; text-transform: uppercase; color: var(--muted); }
+			.url { min-width: 0; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.85rem; word-break: break-all; }
+			@media (max-width: 32rem) {
+				.address { display: flex; flex-wrap: wrap; }
+				.url { flex-basis: 100%; order: 1; }
+				.subscribe { margin-left: auto; }
+			}
 			.subscribe { font-size: 0.8rem; text-decoration: none; white-space: nowrap; border: 1px solid var(--line); border-radius: 6px; padding: 0.1em 0.7em; }
 			.subscribe:hover { border-color: var(--accent); }
 		`;
