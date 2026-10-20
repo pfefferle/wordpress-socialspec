@@ -80,6 +80,17 @@
 	};
 
 	/**
+	 * Replaces the numbered placeholders of a translated text, e.g. "%1$s",
+	 * with nodes, so translators get the whole sentence.
+	 *
+	 * @param {string}           text  The translated text.
+	 * @param {...(Node|string)} nodes The nodes, in placeholder order.
+	 * @return {Array<Node|string>} The text and the nodes.
+	 */
+	const interpolate = ( text, ...nodes ) =>
+		text.split( /%(\d)\$s/ ).map( ( part, index ) => ( index % 2 ? nodes[ part - 1 ] ?? '' : part ) );
+
+	/**
 	 * A line with one address and its format.
 	 *
 	 * @param {string} format The format label, e.g. "Feed".
@@ -157,6 +168,7 @@
 	document.addEventListener( 'DOMContentLoaded', () => {
 		const title = opml.querySelector( 'head > title' )?.textContent || __( 'Subscription list', DOMAIN );
 		const modified = opml.querySelector( 'head > dateModified' )?.textContent;
+		const owner = opml.querySelector( 'head > ownerId' )?.textContent;
 		const outlines = [ ...opml.querySelectorAll( 'body > outline' ) ];
 
 		const style = `
@@ -173,6 +185,8 @@
 			.intro img { width: 5rem; height: auto; justify-self: end; }
 			h1, h2, h3, h4, h5, h6 { margin: 0; line-height: 1.3; }
 			h1 { font-size: 2rem; margin-bottom: var(--gap); }
+			h1 a { color: inherit; text-decoration: none; }
+			h1 a:hover { text-decoration: underline; }
 			h1:has(+ .meta) { margin-bottom: 0.25rem; }
 			h1 + .meta { margin-bottom: var(--gap); }
 			article, .group { margin-bottom: calc(var(--gap) / 2); }
@@ -220,6 +234,16 @@
 							el(
 								'p',
 								{},
+								...interpolate(
+									/* translators: 1: FollowSpec link, 2: SocialSpec link. */
+									__( 'It lists the blogs and podcasts this site follows, as described by %1$s. Feed readers that support %2$s find it on their own and show it next to the About page and the contact card of the site.', DOMAIN ),
+									el( 'a', { href: 'https://followspec.org/' }, 'FollowSpec' ),
+									el( 'a', { href: 'https://socialspec.org/' }, 'SocialSpec' )
+								)
+							),
+							el(
+								'p',
+								{},
 								el(
 									'small',
 									{},
@@ -235,7 +259,7 @@
 				el(
 					'main',
 					{ class: 'container' },
-					el( 'h1', {}, title ),
+					el( 'h1', {}, link( owner, title ) ),
 					modified ? el( 'p', { class: 'meta' }, modified ) : null,
 					...( outlines.length
 						? outlines.map( ( outline ) => render( outline, 2 ) )
