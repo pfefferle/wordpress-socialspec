@@ -19,6 +19,7 @@ final class Menu {
 	 */
 	public static function init(): void {
 		\add_action( 'admin_menu', array( self::class, 'admin_menu' ) );
+		\add_action( 'load-settings_page_socialspec', array( Settings::class, 'add_help_tabs' ) );
 		\add_filter( 'plugin_action_links_' . SOCIALSPEC_PLUGIN_BASENAME, array( self::class, 'plugin_action_links' ) );
 	}
 

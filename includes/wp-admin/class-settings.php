@@ -22,6 +22,79 @@ final class Settings {
 	}
 
 	/**
+	 * Adds the help tabs and the help sidebar to the settings page.
+	 */
+	public static function add_help_tabs(): void {
+		$screen = \get_current_screen();
+
+		if ( ! $screen ) {
+			return;
+		}
+
+		$screen->add_help_tab(
+			array(
+				'id'      => 'socialspec-overview',
+				'title'   => \__( 'Overview', 'socialspec' ),
+				'content' =>
+					'<p>' . \__( 'Your site probably has an About page already, maybe a contact page and a list of blogs you like to read. People can read these pages, but apps can not. SocialSpec publishes the same information in simple files that every feed reader and social app can understand.', 'socialspec' ) . '</p>' .
+					'<p>' . \__( 'Choose who represents the site: a user for a personal site, or &#8220;Nobody, use the site&#8221; for a magazine or a company. Then choose your About page, or keep &#8220;Automatic&#8221;. Save, and open the links under &#8220;Endpoints&#8221; to check the result.', 'socialspec' ) . '</p>',
+			)
+		);
+
+		$screen->add_help_tab(
+			array(
+				'id'      => 'socialspec-about',
+				'title'   => \__( 'About', 'socialspec' ),
+				'content' =>
+					'<p>' . \__( 'The plugin looks for your About text in this order:', 'socialspec' ) . '</p>' .
+					'<ol>' .
+						'<li>' . \__( 'The page you chose in the settings.', 'socialspec' ) . '</li>' .
+						'<li>' . \__( 'The page with the address <code>/about</code>.', 'socialspec' ) . '</li>' .
+						'<li>' . \__( 'The &#8220;Biographical Info&#8221; of the user who represents the site, from their profile.', 'socialspec' ) . '</li>' .
+					'</ol>' .
+					'<p>' . \__( 'If none of these exists, there is no About file.', 'socialspec' ) . '</p>',
+			)
+		);
+
+		$screen->add_help_tab(
+			array(
+				'id'      => 'socialspec-contact',
+				'title'   => \__( 'Contact', 'socialspec' ),
+				'content' =>
+					'<p>' . \__( 'If you chose a user, the contact card shows their display name, first and last name, website, &#8220;Biographical Info&#8221; and profile picture. Otherwise it shows the site title, tagline and site icon.', 'socialspec' ) . '</p>' .
+					'<p>' . \__( 'Neither the email address of a user nor the admin email of the site is published.', 'socialspec' ) . '</p>',
+			)
+		);
+
+		$screen->add_help_tab(
+			array(
+				'id'      => 'socialspec-following',
+				'title'   => \__( 'Following', 'socialspec' ),
+				'content' =>
+					'<p>' . \__( 'WordPress has no list of blogs you follow, so other plugins add them. The &#8220;Endpoints&#8221; section shows which plugins currently do. If you still use the old WordPress Link Manager, links with an RSS address are included too. Without any of these, the list is empty.', 'socialspec' ) . '</p>',
+			)
+		);
+
+		$screen->add_help_tab(
+			array(
+				'id'      => 'socialspec-troubleshooting',
+				'title'   => \__( 'Troubleshooting', 'socialspec' ),
+				'content' =>
+					'<p>' . \__( 'If the links show a &#8220;Not Found&#8221; page of your server, your server does not pass addresses that start with <code>/.well-known/</code> to WordPress. Ask your host to pass them on.', 'socialspec' ) . '</p>' .
+					'<p>' . \__( 'SocialSpec expects the files at the root of your domain. If WordPress lives in a subfolder, apps will probably not find them.', 'socialspec' ) . '</p>',
+			)
+		);
+
+		$screen->set_help_sidebar(
+			'<p><strong>' . \__( 'For more information:', 'socialspec' ) . '</strong></p>' .
+			'<p><a href="https://socialspec.org/" target="_blank" rel="noopener noreferrer">SocialSpec</a></p>' .
+			'<p><a href="https://aboutspec.org/" target="_blank" rel="noopener noreferrer">AboutSpec</a></p>' .
+			'<p><a href="https://contactspec.org/" target="_blank" rel="noopener noreferrer">ContactSpec</a></p>' .
+			'<p><a href="https://followspec.org/" target="_blank" rel="noopener noreferrer">FollowSpec</a></p>'
+		);
+	}
+
+	/**
 	 * The sources of the feeds in /.well-known/following.opml.
 	 *
 	 * The Link Manager, if enabled, and the plugins hooked into the
