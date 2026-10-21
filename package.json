@@ -22,7 +22,7 @@
     "markdown"
   ],
   "author": "Matthias Pfefferle",
-  "license": "MIT",
+  "license": "GPL-2.0-or-later",
   "bugs": {
     "url": "https://github.com/pfefferle/wordpress-socialspec/issues"
   },

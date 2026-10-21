@@ -7,8 +7,8 @@
 - Tested up to: 7.1
 - Stable tag: 1.0.0
 - Requires PHP: 8.1
-- License: MIT
-- License URI: https://opensource.org/licenses/MIT
+- License: GPL-2.0-or-later
+- License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
 Share who you are, how to reach you and what you follow with feed readers and social apps.
 

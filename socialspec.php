@@ -8,8 +8,8 @@
  * Requires PHP: 8.1
  * Author: Matthias Pfefferle
  * Author URI: https://notiz.blog/
- * License: MIT
- * License URI: https://opensource.org/licenses/MIT
+ * License: GPL-2.0-or-later
+ * License URI: https://www.gnu.org/licenses/gpl-2.0.html
  * Text Domain: socialspec
  * Update URI: https://github.com/pfefferle/wordpress-socialspec
  *
