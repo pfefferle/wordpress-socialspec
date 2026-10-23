@@ -5,32 +5,16 @@
  * script element in it. It replaces the XML with HTML, see
  * https://jakearchibald.com/2025/making-xml-human-readable-without-xslt/
  *
- * Translations are loaded the WordPress way: the JSON of the script is
- * passed in a script element with the id "opml-translations".
+ * The labels are translated in PHP and passed in a JSON script element with
+ * the id "socialspec-opml-l10n".
  */
 ( function () {
 	const XHTML = 'http://www.w3.org/1999/xhtml';
-	const DOMAIN = 'socialspec';
-	const i18n = window.wp && window.wp.i18n;
-	const __ = i18n ? i18n.__ : ( text ) => text;
 	const opml = document.documentElement;
 	// The icon lives next to the script.
 	const icon = document.currentScript ? new URL( '../images/opml.svg', document.currentScript.src ).href : null;
-	let lang = '';
-
-	// Before anything is translated.
-	const translations = document.getElementById( 'opml-translations' );
-	if ( i18n && translations ) {
-		try {
-			const data = JSON.parse( translations.textContent );
-			const localeData = data.locale_data[ DOMAIN ] || data.locale_data.messages;
-			localeData[ '' ].domain = DOMAIN;
-			lang = ( localeData[ '' ].lang || '' ).replace( '_', '-' );
-			i18n.setLocaleData( localeData, DOMAIN );
-		} catch ( error ) {
-			// Untranslated then.
-		}
-	}
+	// The JSON comes before the script, so it is already parsed.
+	const l10n = JSON.parse( document.getElementById( 'socialspec-opml-l10n' ).textContent );
 
 	/**
 	 * Creates an HTML element. Text is added as text, never as markup.
@@ -80,15 +64,12 @@
 	};
 
 	/**
-	 * Replaces the numbered placeholders of a translated text, e.g. "%1$s",
-	 * with nodes, so translators get the whole sentence.
+	 * Parses markup of the plugin itself, e.g. a translation with a link.
 	 *
-	 * @param {string}           text  The translated text.
-	 * @param {...(Node|string)} nodes The nodes, in placeholder order.
-	 * @return {Array<Node|string>} The text and the nodes.
+	 * @param {string} html The markup.
+	 * @return {Node[]} The nodes.
 	 */
-	const interpolate = ( text, ...nodes ) =>
-		text.split( /%(\d)\$s/ ).map( ( part, index ) => ( index % 2 ? nodes[ part - 1 ] ?? '' : part ) );
+	const markup = ( html ) => [ ...new DOMParser().parseFromString( html, 'text/html' ).body.childNodes ];
 
 	/**
 	 * A line with one address and its format.
@@ -143,7 +124,7 @@
 				'article',
 				{},
 				el( heading, {}, text ),
-				address( 'include' === type ? 'OPML' : __( 'Link', DOMAIN ), url )
+				address( 'include' === type ? 'OPML' : l10n.link, url )
 			);
 		}
 
@@ -156,17 +137,17 @@
 				'div',
 				{ class: 'title' },
 				el( heading, {}, link( outline.getAttribute( 'htmlUrl' ), text ) ),
-				feed ? el( 'a', { class: 'subscribe', href: 'feed:' + feed }, __( 'Subscribe', DOMAIN ) ) : null
+				feed ? el( 'a', { class: 'subscribe', href: 'feed:' + feed }, l10n.subscribe ) : null
 			),
 			description ? el( 'p', { class: 'meta' }, description ) : null,
-			address( __( 'Feed', DOMAIN ), feed )
+			address( l10n.feed, feed )
 		);
 	};
 
 	// Chrome ignores defer in XML documents and runs the script before the
 	// rest of the document is parsed.
 	document.addEventListener( 'DOMContentLoaded', () => {
-		const title = opml.querySelector( 'head > title' )?.textContent || __( 'Subscription list', DOMAIN );
+		const title = opml.querySelector( 'head > title' )?.textContent || l10n.subscriptionList;
 		const modified = opml.querySelector( 'head > dateModified' )?.textContent;
 		const owner = opml.querySelector( 'head > ownerId' )?.textContent;
 		const outlines = [ ...opml.querySelectorAll( 'body > outline' ) ];
@@ -204,7 +185,7 @@
 
 		const html = el(
 			'html',
-			lang ? { lang } : {},
+			l10n.lang ? { lang: l10n.lang } : {},
 			el(
 				'head',
 				{},
@@ -224,33 +205,12 @@
 						el(
 							'div',
 							{},
+							el( 'p', {}, ...markup( l10n.intro ) ),
+							el( 'p', {}, ...markup( l10n.follows ) ),
 							el(
 								'p',
 								{},
-								el( 'strong', {}, __( 'This is an OPML subscription list.', DOMAIN ) ),
-								' ',
-								__( 'Feed readers use OPML to share and move a collection of subscriptions.', DOMAIN )
-							),
-							el(
-								'p',
-								{},
-								...interpolate(
-									/* translators: 1: FollowSpec link, 2: SocialSpec link. */
-									__( 'It lists the blogs and podcasts this site follows, as described by %1$s. Feed readers that support %2$s find it on their own and show it next to the About page and the contact card of the site.', DOMAIN ),
-									el( 'a', { href: 'https://followspec.org/' }, 'FollowSpec' ),
-									el( 'a', { href: 'https://socialspec.org/' }, 'SocialSpec' )
-								)
-							),
-							el(
-								'p',
-								{},
-								el(
-									'small',
-									{},
-									__( 'Copy the address of this page and use the import feature of your feed reader to add the whole list at once.', DOMAIN ),
-									' ',
-									el( 'a', { href: 'https://opml.org/' }, __( 'Learn more about OPML', DOMAIN ) )
-								)
+								el( 'small', {}, ...markup( l10n.import ) )
 							)
 						),
 						icon ? el( 'img', { src: icon, alt: '' } ) : null
@@ -263,7 +223,7 @@
 					modified ? el( 'p', { class: 'meta' }, modified ) : null,
 					...( outlines.length
 						? outlines.map( ( outline ) => render( outline, 2 ) )
-						: [ el( 'p', {}, __( 'This list is empty.', DOMAIN ) ) ] )
+						: [ el( 'p', {}, l10n.empty ) ] )
 				)
 			)
 		);
