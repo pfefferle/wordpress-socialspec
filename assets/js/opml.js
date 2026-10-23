@@ -180,9 +180,9 @@
 			.container { max-width: 46rem; width: 95%; margin-inline: auto; }
 			.intro { background: var(--intro); padding-block: calc(var(--gap) / 2); margin-bottom: var(--gap); }
 			main { padding-bottom: var(--gap); }
-			.intro .container { display: grid; grid-template-columns: 4fr 2fr; gap: 1rem; align-items: start; }
-			@media (min-width: 40rem) { .intro .container { grid-template-columns: 4fr 1fr; align-items: center; } }
-			.intro img { width: 5rem; height: auto; justify-self: end; }
+			.intro .container { display: grid; grid-template-columns: 1fr auto; gap: 1rem; align-items: center; }
+			.intro img { width: 3rem; height: auto; justify-self: end; }
+			@media (min-width: 40rem) { .intro .container { grid-template-columns: 4fr 1fr; } .intro img { width: 5rem; } }
 			h1, h2, h3, h4, h5, h6 { margin: 0; line-height: 1.3; }
 			h1 { font-size: 2rem; margin-bottom: var(--gap); }
 			h1 a { color: inherit; text-decoration: none; }
