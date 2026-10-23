@@ -175,20 +175,17 @@ class Test_Following extends \WP_UnitTestCase {
 	public function test_render_scripts() {
 		$following = new Following();
 
-		$translate = static fn ( string $translation, string $text ): string => 'Feed' === $text ? 'Feed <&>' : $translation;
-		\add_filter( 'gettext_socialspec', $translate, 10, 2 );
+		\add_filter( 'pre_load_script_translations', static fn (): string => '{"locale_data":{"messages":{"":{"lang":"de_DE"},"Feed":["Feed <&>"]}}}' );
 
 		$opml = $this->render( $following );
 		$xml  = \simplexml_load_string( $opml );
 
-		\remove_filter( 'gettext_socialspec', $translate );
-
 		$this->assertSame( 'application/xml', $following->get_content_type() );
 		$this->assertNotFalse( $xml, 'The OPML is well-formed XML.' );
 
-		// The script with the plugin version, the translations escaped for XML.
-		$this->assertStringContainsString( '/assets/js/opml.js?ver=' . SOCIALSPEC_VERSION . '"', $opml );
-		$this->assertStringContainsString( '"feed":"Feed &lt;&amp;&gt;"', $opml );
+		// The dependencies first, the translations escaped for XML.
+		$this->assertMatchesRegularExpression( '#/hooks(\.min)?\.js\?ver=.*/i18n(\.min)?\.js\?ver=.*/assets/js/opml\.js\?ver=' . \preg_quote( SOCIALSPEC_VERSION, '#' ) . '"#s', $opml );
+		$this->assertStringContainsString( 'id="opml-translations">{"locale_data":{"messages":{"":{"lang":"de_DE"},"Feed":["Feed &lt;&amp;&gt;"]}}}</script>', $opml );
 	}
 
 	/**
