@@ -27,6 +27,20 @@ final class Socialspec {
 		\add_action( 'init', array( self::class, 'add_rewrite_rules' ) );
 		\add_filter( 'query_vars', array( self::class, 'query_vars' ) );
 		\add_action( 'parse_request', array( self::class, 'parse_request' ) );
+
+		// Apps read the feed next to the documents, so the core feeds get CORS too.
+		foreach ( array( 'rdf', 'rss', 'rss2', 'atom' ) as $feed ) {
+			\add_action( "do_feed_{$feed}", array( self::class, 'send_cors_header' ), 1 );
+		}
+	}
+
+	/**
+	 * Allows browser apps on other origins to read the response.
+	 */
+	public static function send_cors_header(): void {
+		if ( ! \headers_sent() ) {
+			\header( 'Access-Control-Allow-Origin: *' );
+		}
 	}
 
 	/**

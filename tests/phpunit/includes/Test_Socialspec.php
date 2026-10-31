@@ -31,6 +31,21 @@ class Test_Socialspec extends \WP_UnitTestCase {
 	}
 
 	/**
+	 * The core feeds send the CORS header, custom feeds do not.
+	 *
+	 * @covers ::init
+	 */
+	public function test_feed_cors_hooks() {
+		$callback = array( Socialspec::class, 'send_cors_header' );
+
+		foreach ( array( 'rdf', 'rss', 'rss2', 'atom' ) as $feed ) {
+			$this->assertSame( 1, \has_action( "do_feed_{$feed}", $callback ), $feed );
+		}
+
+		$this->assertFalse( \has_action( 'do_feed_custom', $callback ) );
+	}
+
+	/**
 	 * Documents can be removed, invalid ones are dropped.
 	 *
 	 * @covers ::get_documents

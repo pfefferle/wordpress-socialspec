@@ -78,7 +78,7 @@ Only partly. SocialSpec expects the files at the root of your domain, like `http
 
 ## For developers
 
-All three files are sent with `Access-Control-Allow-Origin: *`, so apps can load them from the browser.
+All three files and the core feeds (RSS, RSS2, RDF, Atom) are sent with `Access-Control-Allow-Origin: *`, so apps can load them from the browser.
 
 ### Add the feeds you follow
 
