@@ -13,6 +13,8 @@
  * }
  */
 
+\defined( 'ABSPATH' ) || exit;
+
 echo '<?xml version="1.0" encoding="' . \esc_attr( \get_bloginfo( 'charset' ) ) . '"?>' . "\n";
 ?>
 <opml version="2.0">

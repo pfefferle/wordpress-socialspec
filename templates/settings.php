@@ -8,6 +8,8 @@
 use Socialspec\Socialspec;
 use Socialspec\WP_Admin\Settings;
 
+\defined( 'ABSPATH' ) || exit;
+
 ?>
 <div class="wrap">
 	<h1><?php echo \esc_html( \get_admin_page_title() ); ?></h1>
