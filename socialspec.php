@@ -1,7 +1,7 @@
 <?php
 /**
  * Plugin Name: SocialSpec
- * Plugin URI: https://github.com/pfefferle/wordpress-socialspec
+ * Plugin URI: https://github.com/socialspec/wordpress-socialspec
  * Description: Publishes the SocialSpec APIs (FollowSpec, AboutSpec, ContactSpec) at /.well-known/.
  * Version: 1.0.0
  * Requires at least: 6.7
@@ -11,7 +11,7 @@
  * License: GPL-2.0-or-later
  * License URI: https://www.gnu.org/licenses/gpl-2.0.html
  * Text Domain: socialspec
- * Update URI: https://github.com/pfefferle/wordpress-socialspec
+ * Update URI: https://github.com/socialspec/wordpress-socialspec
  *
  * @package Socialspec
  */
